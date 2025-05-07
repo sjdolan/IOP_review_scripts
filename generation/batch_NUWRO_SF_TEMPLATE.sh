@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH --image=docker:wilkinsonnu/nuisance_project:nuwro_19.02.2
+#SBATCH --account=dune
 #SBATCH --qos=shared
 #SBATCH --constraint=cpu
-#SBATCH --time=720
+#SBATCH --time=1440
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mem=4GB
@@ -20,7 +21,7 @@ ROOT_NAME=__ROOT_NAME__
 OUTFILE=__OUTFILE__
 
 ## Place for storing common inputs
-INDIR=${PWD}/MC_inputs
+INPUTS_DIR=${PWD}/MC_inputs
 INCARD=generic_NUWRO_SF.params
 
 ## Where to temporarily save files
@@ -31,10 +32,10 @@ mkdir ${TEMPDIR}
 cd ${TEMPDIR}
 
 ## Get the flux file
-cp ${INDIR}/${FLUX_FILE} .
+cp ${INPUTS_DIR}/${FLUX_FILE} .
 
 ## Get and modify the card
-cp ${INDIR}/${INCARD} .
+cp ${INPUTS_DIR}/${INCARD} .
 sed -i "s/_NU_PDG_/${NU_PDG}/g" ${INCARD}
 sed -i "s/_THIS_SEED_/${THIS_SEED}/g" ${INCARD}
 sed -i "s/_FLUX_FILE_/${FLUX_FILE}/g" ${INCARD}
@@ -48,6 +49,10 @@ elif [[ $TARG == "1000060120[0.9231],1000010010[0.0769]" ]]; then
     SHORT_TARG="CH"
 elif [[ $TARG == "1000180400[1.00]" ]]; then
     SHORT_TARG="Ar"
+elif [[ $TARG == "1000060120[0.85714],1000010010[0.14286]" ]]; then
+    SHORT_TARG="CH2"
+elif [[ $TARG == "1000060120[1.00]" ]]; then
+    SHORT_TARG="C"
 else
     echo "Don't know how to parse target ${TARG}... exiting..."
     exit
@@ -60,7 +65,7 @@ shifter -V ${PWD}:/output --entrypoint nuisflat -f GenericVectors -i NUWRO:${OUT
 echo "Complete"
 
 ## Copy back the important files
-cp ${TEMPDIR}/${OUTFILE} ${OUTDIR}/.
+# cp ${TEMPDIR}/${OUTFILE} ${OUTDIR}/.
 cp ${TEMPDIR}/${OUTFILE/.root/_NUISFLAT.root} ${OUTDIR}/.
 
 ## Clean up

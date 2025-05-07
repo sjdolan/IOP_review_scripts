@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH --image=docker:wilkinsonnu/nuisance_project:neut_5.6.2
+#SBATCH --account=dune
 #SBATCH --qos=shared
 #SBATCH --constraint=cpu
-#SBATCH --time=720
+#SBATCH --time=1440
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mem=4GB
@@ -20,7 +21,7 @@ ROOT_NAME=__ROOT_NAME__
 OUTFILE=__OUTFILE__
 
 ## Place for storing common inputs
-INDIR=${PWD}/MC_inputs
+INPUTS_DIR=${PWD}/MC_inputs
 INCARD=generic_NEUT.card
 
 ## Where to temporarily save files
@@ -35,8 +36,8 @@ echo "${THIS_SEED} $((THIS_SEED+1)) $((THIS_SEED+2)) $((THIS_SEED+3)) $((THIS_SE
 export RANFILE=ranfile.txt
 
 ## Sort out the inputs
-cp ${INDIR}/${FLUX_FILE} .
-cp ${INDIR}/${INCARD} .
+cp ${INPUTS_DIR}/${FLUX_FILE} .
+cp ${INPUTS_DIR}/${INCARD} .
 sed -i "s/_NU_PDG_/${NU_PDG}/g" ${INCARD}
 sed -i "s/_FLUX_FILE_/${FLUX_FILE}/g" ${INCARD}
 sed -i "s/_FLUX_HIST_/${FLUX_HIST}/g" ${INCARD}
@@ -61,6 +62,16 @@ elif [[ $TARG == "1000180400[1.00]" ]]; then
     NEUTRONS=22
     NUCLEONS=40
     HYDROGEN=0
+elif [[ $TARG == "1000060120[0.85714],1000010010[0.14286]" ]]; then
+    PROTONS=6
+    NEUTRONS=6
+    NUCLEONS=12
+    HYDROGEN=2
+elif [[ $TARG == "1000060120[1.00]" ]]; then
+    PROTONS=6
+    NEUTRONS=6
+    NUCLEONS=12
+    HYDROGEN=0
 else
     echo "Don't know how to parse target ${TARG}... exiting..."
     exit
@@ -76,7 +87,7 @@ shifter -V ${PWD}:/output --entrypoint nuisflat -f GenericVectors -i NEUT:${OUTF
 echo "Complete"
 
 ## Copy back the important files
-cp ${TEMPDIR}/${OUTFILE} ${OUTDIR}/.
+# cp ${TEMPDIR}/${OUTFILE} ${OUTDIR}/.
 cp ${TEMPDIR}/${OUTFILE/.root/_NUISFLAT.root} ${OUTDIR}/.
 
 ## Clean up

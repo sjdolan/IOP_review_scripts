@@ -1,0 +1,84 @@
+! file: code/init/neutrino/initNeutrino.f90
+&neutrino_induced
+       process_ID      =  _PROC_  ! 2:CC, 3:NC, -2:antiCC, -3:antiNC
+       flavor_ID       =  _NU_FLAV_  ! 1:electron, 2:muon, 3:tau
+       nuXsectionMode  = 16  ! 16: EXP_dSigmaMC
+       nuExp           = 99  ! User defined!
+       FileNameFlux    = './_THIS_FLUX_FILE_'
+
+       ! Modes to include
+       includeQE       = T
+       includeDELTA    = T
+       includeRES      = T
+       include1pi      = T
+       includeDIS      = T
+       include2p2hQE   = T
+       include2pi      = T
+/
+
+
+! file: code/density/nucleus.f90
+&target
+	target_Z=_PROTONS_
+	target_A=_NUCLEONS_
+	densitySwitch_Static=1          ! 0: density=0.0, 1: Woods-Saxon by Lenske, 2 : NPA 554, 3: Woods-Saxon by Lenske, different neutron and proton radii (default)
+/
+
+
+! file: code/density/density.f90
+&initDensity
+    densitySwitch=2                 ! 1=dynamic density according to testparticle density (default), 2=analytic density prescription
+/
+
+
+! file: code/density/pauliBlocking.f90
+&initPauli
+    pauliSwitch=2                   ! 1=dynamic (default), 2=analytic
+/
+
+! file: code/inputOutput/input.f90
+! the number of generated events is proportional (but not equal, because some "events" can be in prohibited phase space)
+! to target_A * numEnsembles * num_runs_SameEnergy
+&input
+      numEnsembles=_NUM_ENSEMBLES_        ! for C12 you can use 4000, for heavier nuclei should be lower; decrease it if there are problems with memory,
+      eventtype=5               ! 5=neutrino
+      numTimeSteps=150          ! the distance numTimeSteps*delta_T (100*0.2=20 fm in this example) should significantly exceed the radius of the target nucleus
+      delta_T=0.2               ! timestep for hadron propagation [fm]
+      fullensemble  = F         ! ENGAGE SNAIL MODE
+      localEnsemble = F
+      num_runs_SameEnergy=1     ! increase these if you want to increase statistics (= number of generated events)
+      length_perturbative = 1000 ! The default caused failures sometimes...
+
+      DoPrLevel(1) = .FALSE. ! set this for production runs
+      DoPrLevel(2) = .FALSE. ! set this for production runs   
+      freezeRealParticles=.true.
+      LRF_equals_CALC_frame=.true. !if .false.: no offshelltransport possible
+      path_to_input='/opt/generators/GiBUU/buuinput'
+      version = 2025
+/
+
+
+! file: code/analysis/EventOutputAnalysis.f90
+&EventOutput
+      WritePerturbativeParticles = T
+      EventFormat = 4
+!     EventFormat=1 ! 1=LesHouches(default), 2=Oscar, 3=Shanghai, 4=ROOT
+/
+
+
+! file: code/propagation/propagation.f90
+&propagation
+        RungeKuttaOrder=2                ! 1=first order Runge-Kutta (default), 2=second order Runge-Kutta
+/
+
+
+! file: code/collisions/twoBodyReactions/HiEnergy/DoCollTools.f90
+&pythia
+   PARP(91)=0.44
+/
+
+
+! file: ./numerics/random.f90
+&initRandom
+      SEED=_THIS_SEED_
+/

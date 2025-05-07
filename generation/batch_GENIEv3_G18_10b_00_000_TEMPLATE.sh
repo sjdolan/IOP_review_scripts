@@ -2,7 +2,7 @@
 #SBATCH --image=docker:wilkinsonnu/nuisance_project:genie_v3.2.0
 #SBATCH --qos=shared
 #SBATCH --constraint=cpu
-#SBATCH --time=720
+#SBATCH --time=1440
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mem=4GB
@@ -23,6 +23,7 @@ TUNE=G18_10b_00_000
 NEVENTS=1000000
 E_MIN=__E_MIN__
 E_MAX=__E_MAX__
+INPUTS_DIR=${PWD}/MC_inputs
 
 ## Where to temporarily save files
 TEMPDIR=${SCRATCH}/${OUTFILE/.root/}_${THIS_SEED}
@@ -32,14 +33,14 @@ mkdir ${TEMPDIR}
 cd ${TEMPDIR}
 
 ## Get the splines that are now needed...
-cp ${PWD}/MC_inputs/${TUNE}_v320_splines.xml .
+cp ${INPUTS_DIR}/${TUNE}_v320_splines.xml.gz .
 
 ## Get the flux file
-cp ${PWD}/MC_inputs/${FLUX_FILE} .
+cp ${INPUTS_DIR}/${FLUX_FILE} .
 
 echo "Starting gevgen..."
 shifter -V ${PWD}:/output --entrypoint gevgen -n ${NEVENTS} -t ${TARG} -p ${NU_PDG} \
-	--cross-sections ${TUNE}_v320_splines.xml \
+	--cross-sections ${TUNE}_v320_splines.xml.gz \
 	--tune ${TUNE} --seed ${THIS_SEED} \
 	-f ${FLUX_FILE},${FLUX_HIST} -e ${E_MIN},${E_MAX} -o ${OUTFILE}
 
@@ -51,7 +52,7 @@ shifter -V ${PWD}:/output --entrypoint nuisflat -f GenericVectors -i GENIE:${OUT
 echo "Complete"
 
 ## Copy back the important files
-cp ${TEMPDIR}/${OUTFILE/.root/_NUIS.root} ${OUTDIR}/.
+# cp ${TEMPDIR}/${OUTFILE/.root/_NUIS.root} ${OUTDIR}/.
 cp ${TEMPDIR}/${OUTFILE/.root/_NUISFLAT.root} ${OUTDIR}/.
 
 ## Clean up
